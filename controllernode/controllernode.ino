@@ -14,17 +14,7 @@ bool lastBleIphoneConnected = false;
 // BLE synchronization context
 BleSyncContext bleSyncCtx;
 
-// Synchronization packets (same structure as before)
-typedef struct {
-  uint32_t t_send_us;    // Controller timestamp
-  StimulationPeriod stimPeriods[NUM_PERIODS];
-} SyncPacket;
-
-typedef struct {
-  uint32_t t_recv_us;
-  uint32_t t_send_us;
-} AckPacket;
-
+// Synchronization packets defined in ble_sync.h
 SyncPacket packet_0;
 AckPacket ack;
 volatile bool requestSleep = false;

@@ -94,40 +94,40 @@ class ClientCallbacks : public NimBLEClientCallbacks {
   }
 };
 
-class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
- public:
-  void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-    if (!g_ctx || g_ctx->peerDevice) return;
-    
-    String name = String(advertisedDevice->getName().c_str());
-    Serial.print(F("[BLE Sync] Found device: "));
-    Serial.println(name);
-    
-    // Check if this is our target (NODE if we're CONTROLLER)
-    #ifdef CONTROLLER
-    if (name.equals(NODE_BLE_NAME)) {
-      Serial.println(F("[BLE Sync] Found target NODE"));
-      g_ctx->peerDevice = new NimBLEAdvertisedDevice(*advertisedDevice);
-      NimBLEDevice::getScan()->stop();
-      g_ctx->scanning = false;
-    }
-    #endif
-  }
-};
+// Callback for scan results (NimBLE 2.x uses function callbacks)
+static void scanCompleteCB(NimBLEScanResults results) {
+  // Scan complete
+}
 
-class NotifyCallbacks : public NimBLERemoteCharacteristicCallbacks {
- public:
-  void onNotify(NimBLERemoteCharacteristic* pRemoteChar, uint8_t* pData, size_t length, bool isNotify) {
-    if (!g_ctx) return;
-    std::vector<uint8_t> data(pData, pData + length);
-    g_ctx->rxBuffer.push(data);
-    
-    // Immediately process if callback is set
-    if (g_onReceiveCallback) {
-      g_onReceiveCallback(data.data(), length);
-    }
+static void advertisedDeviceCB(NimBLEAdvertisedDevice* advertisedDevice) {
+  if (!g_ctx || g_ctx->peerDevice) return;
+  
+  String name = String(advertisedDevice->getName().c_str());
+  Serial.print(F("[BLE Sync] Found device: "));
+  Serial.println(name);
+  
+  // Check if this is our target (NODE if we're CONTROLLER)
+  #ifdef CONTROLLER
+  if (name.equals(NODE_BLE_NAME)) {
+    Serial.println(F("[BLE Sync] Found target NODE"));
+    g_ctx->peerDevice = new NimBLEAdvertisedDevice(*advertisedDevice);
+    NimBLEDevice::getScan()->stop();
+    g_ctx->scanning = false;
   }
-};
+  #endif
+}
+
+// Notification callback function (NimBLE 2.x uses function callbacks)
+static void notifyCB(NimBLERemoteCharacteristic* pRemoteChar, uint8_t* pData, size_t length, bool isNotify) {
+  if (!g_ctx) return;
+  std::vector<uint8_t> data(pData, pData + length);
+  g_ctx->rxBuffer.push(data);
+  
+  // Immediately process if callback is set
+  if (g_onReceiveCallback) {
+    g_onReceiveCallback(data.data(), length);
+  }
+}
 
 // ==================== COMMON FUNCTIONS ====================
 
@@ -173,9 +173,7 @@ inline void startServer(BleSyncContext &ctx) {
   // Start advertising
   NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SYNC_SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06);  // Fast connection
-  pAdvertising->setMaxPreferred(0x12);
+  pAdvertising->setScanResponse(false);
   pAdvertising->start();
   
   Serial.print(F("[BLE Sync] Server started, advertising as: "));
@@ -191,12 +189,11 @@ inline bool scanAndConnect(BleSyncContext &ctx, uint32_t scanTimeSeconds = 5) {
   ctx.scanning = true;
   
   NimBLEScan* pScan = NimBLEDevice::getScan();
-  static AdvertisedDeviceCallbacks advCallbacks;
-  pScan->setAdvertisedDeviceCallbacks(&advCallbacks);
+  pScan->setAdvertisedDeviceCallbacks(advertisedDeviceCB);
   pScan->setInterval(97);
   pScan->setWindow(37);
   pScan->setActiveScan(true);
-  pScan->start(scanTimeSeconds, false);
+  pScan->start(scanTimeSeconds, scanCompleteCB, false);
   
   if (!ctx.peerDevice) {
     Serial.println(F("[BLE Sync] No target device found"));
@@ -243,8 +240,7 @@ inline bool scanAndConnect(BleSyncContext &ctx, uint32_t scanTimeSeconds = 5) {
   
   // Subscribe to notifications
   if (ctx.remoteTxChar->canNotify()) {
-    static NotifyCallbacks notifyCallbacks;
-    ctx.remoteTxChar->subscribe(true, &notifyCallbacks);
+    ctx.remoteTxChar->subscribe(true, notifyCB);
   }
   
   ctx.connected = true;
