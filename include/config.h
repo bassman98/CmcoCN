@@ -20,14 +20,14 @@ static constexpr uint64_t ESP_SLEEP = 100000; // us
 static constexpr char STATUS_JS_URL[] = "https://ikincaid01.wixsite.com/chameleoncollc/_functions/softwareversions";
 
 #ifdef CONTROLLER
-static constexpr uint8_t FW_VERSION = 18;
+static constexpr uint8_t FW_VERSION = 19;
 static constexpr char DEVICE_BLE_NAME[] = "CMCO_CONTROLLER";
 static constexpr char NODE_BLE_NAME[] = "CMCO_NODE";
 static constexpr char SYNC_ROLE[] = "controller";
 #endif
 
 #ifdef NODE
-static constexpr uint8_t FW_VERSION = 18;
+static constexpr uint8_t FW_VERSION = 19;
 static constexpr char DEVICE_BLE_NAME[] = "CMCO_NODE";
 static constexpr char SYNC_ROLE[] = "node";
 #endif
