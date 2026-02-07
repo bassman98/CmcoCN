@@ -20,14 +20,14 @@ static constexpr uint64_t ESP_SLEEP = 100000; // us
 static constexpr char STATUS_JS_URL[] = "https://ikincaid01.wixsite.com/chameleoncollc/_functions/softwareversions";
 
 #ifdef CONTROLLER
-static constexpr uint8_t FW_VERSION = 19;
+static constexpr uint8_t FW_VERSION = 21;
 static constexpr char DEVICE_BLE_NAME[] = "CMCO_CONTROLLER";
 static constexpr char NODE_BLE_NAME[] = "CMCO_NODE";
 static constexpr char SYNC_ROLE[] = "controller";
 #endif
 
 #ifdef NODE
-static constexpr uint8_t FW_VERSION = 19;
+static constexpr uint8_t FW_VERSION = 21;
 static constexpr char DEVICE_BLE_NAME[] = "CMCO_NODE";
 static constexpr char SYNC_ROLE[] = "node";
 #endif
@@ -40,8 +40,8 @@ static constexpr uint32_t SERIAL_BAUD = 115200;
 // PWM
 static constexpr uint8_t PWM_RESOLUTION =  10; // 10 bit resolution (values 0-1023)
 static constexpr float DEFAULT_FREQ = 300.0f;
-static constexpr uint8_t DUTYCYCLE_ON = 511; // 511 = 50% duty cycle
-static constexpr uint8_t DUTYCYCLE_OFF = 0;
+static constexpr uint16_t DUTYCYCLE_ON = 511; // 511 = 50% duty cycle (10-bit value)
+static constexpr uint16_t DUTYCYCLE_OFF = 0;
 
 #ifdef QTPY_ESP32_S3
 static constexpr uint8_t PWM_PINS[] = {18, 17, 9, 8}; //A0-3
