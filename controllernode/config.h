@@ -1,23 +1,13 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+// Legacy shim: forward to project-wide canonical header at include/config.h
+// This file is kept only for legacy path compatibility. The real definitions
+// live in ../include/config.h — edit that file instead.
 
-#include <Arduino.h>
+#ifndef CONTROLLERNODE_CONFIG_SHIM_H
+#define CONTROLLERNODE_CONFIG_SHIM_H
 
-// Role
-#define NODE
-//#define CONTROLLER
+#include "../include/config.h"
 
-// Board
-#define QTPY_ESP32_S3
-//#define GENERIC_ESP32_S3
-
-// Other
-//#define BLUETOOTH
-//#define POWER_SAVER
-
-static constexpr uint64_t ESP_SLEEP = 100000; // us
-
-static constexpr char STATUS_JS_URL[] = "https://ikincaid01.wixsite.com/chameleoncollc/_functions/softwareversions";
+#endif // CONTROLLERNODE_CONFIG_SHIM_H
 
 #ifdef CONTROLLER
 static constexpr uint8_t FW_VERSION = 21;

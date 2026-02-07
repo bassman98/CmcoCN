@@ -2,22 +2,14 @@
 #define STIMULATION_SEQUENCE_H
 
 #include <Arduino.h>
-#include "config.h"
+// Legacy shim: forward to include/stimulation_sequence.h
 
-// ---------------- DATA STRUCT ----------------
+#ifndef CONTROLLERNODE_STIMULATION_SEQUENCE_SHIM_H
+#define CONTROLLERNODE_STIMULATION_SEQUENCE_SHIM_H
 
-struct StimulationPeriod {
-    float   preDelayMs;     // Silence before pulse
-    float   pulseWidthMs;   // PWM ON duration (0 if inactive)
-    float   postDelayMs;    // Silence after pulse
-    bool    active;         // Whether pulse exists
-    uint8_t fingerIndex;    // 0–3
-    float frequency;        // Hz
-};
+#include "../include/stimulation_sequence.h"
 
-// ---------------- CLASS ----------------
-
-class StimulationSequence {
+#endif // CONTROLLERNODE_STIMULATION_SEQUENCE_SHIM_H
 public:
     StimulationSequence() = default;
 

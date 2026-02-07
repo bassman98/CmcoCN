@@ -3,137 +3,21 @@
 #define BLE_SYNC_H
 
 #include <Arduino.h>
-#if defined(NODE)
-#include <WiFi.h>
-#include <esp_now.h>
-#else
 #include <NimBLEDevice.h>
-#endif
 #include <queue>
 #include <vector>
 #include "config.h"
 #include "stimulation_sequence.h"
 
 // Packet structures (same as ESP-NOW)
-typedef struct {
-  uint32_t t_send_us;    // Controller timestamp
-  StimulationPeriod stimPeriods[NUM_PERIODS];
-  uint32_t startDelayUs; // how long after receipt the node should start (microseconds)
-} SyncPacket;
+// Legacy shim: forward to include/ble_sync.h
 
-typedef struct {
-  uint32_t t_recv_us;
-  uint32_t t_send_us;
-} AckPacket;
+#ifndef CONTROLLERNODE_BLE_SYNC_SHIM_H
+#define CONTROLLERNODE_BLE_SYNC_SHIM_H
 
-// BLE Context for sync communication
-struct BleSyncContext {
-  NimBLEServer *server = nullptr;
-  NimBLEClient *client = nullptr;
-  NimBLEAdvertisedDevice *peerDevice = nullptr;
-  NimBLECharacteristic *txChar = nullptr;
-  NimBLECharacteristic *rxChar = nullptr;
-  NimBLERemoteCharacteristic *remoteTxChar = nullptr;
-  NimBLERemoteCharacteristic *remoteRxChar = nullptr;
-  std::queue<std::vector<uint8_t>> rxBuffer;
-  bool connected = false;
-  bool scanning = false;
-};
+#include "../include/ble_sync.h"
 
-namespace BleSync {
-static BleSyncContext *g_ctx = nullptr;
-static void (*g_onReceiveCallback)(const uint8_t*, size_t) = nullptr;
-
-#if defined(NODE)
-// ---------------- ESP-NOW (NODE) IMPLEMENTATION ----------------
-
-static void espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int len) {
-  if (!g_ctx) return;
-  std::vector<uint8_t> vec(data, data + len);
-  g_ctx->rxBuffer.push(vec);
-  if (g_onReceiveCallback) g_onReceiveCallback(vec.data(), vec.size());
-  g_ctx->connected = true;
-}
-
-inline void init(BleSyncContext &ctx) {
-  g_ctx = &ctx;
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  if (esp_now_init() != ESP_OK) {
-    Serial.println(F("[ESP-NOW] init failed"));
-  } else {
-    esp_now_register_recv_cb(espnow_recv_cb);
-    Serial.println(F("[ESP-NOW] Initialized"));
-  }
-}
-
-inline void setReceiveCallback(void (*callback)(const uint8_t*, size_t)) {
-  g_onReceiveCallback = callback;
-}
-
-inline void startServer(BleSyncContext &ctx) {
-  // For ESP-NOW, nothing to advertise; ensure initialized
-  g_ctx = &ctx;
-  ctx.connected = false;
-}
-
-inline bool scanAndConnect(BleSyncContext &ctx, uint32_t /*scanTimeSeconds*/ = 5) {
-  // ESP-NOW does not scan; rely on broadcast/peer setup. Return whether we've seen controller.
-  return ctx.connected;
-}
-
-inline bool send(BleSyncContext &ctx, const uint8_t *data, size_t len) {
-  (void)ctx;
-  // Send as broadcast; controller should receive and respond
-  esp_err_t res = esp_now_send(BROADCASTADDRESS, data, (int)len);
-  return (res == ESP_OK);
-}
-
-inline bool hasData(const BleSyncContext &ctx) {
-  return !ctx.rxBuffer.empty();
-}
-
-inline std::vector<uint8_t> receive(BleSyncContext &ctx) {
-  if (ctx.rxBuffer.empty()) return std::vector<uint8_t>();
-  auto v = ctx.rxBuffer.front();
-  ctx.rxBuffer.pop();
-  return v;
-}
-
-inline bool isConnected(const BleSyncContext &ctx) {
-  return ctx.connected;
-}
-
-inline void update(BleSyncContext &ctx) {
-  (void)ctx; // nothing periodic to do for ESP-NOW
-}
-
-#else
-
-// ==================== SERVER (NODE) ====================
-
-class ServerCallbacks : public NimBLEServerCallbacks {
- public:
-  void onConnect(NimBLEServer* pServer) {
-    Serial.println(F("[BLE Sync] Client connected"));
-    if (g_ctx) g_ctx->connected = true;
-  }
-  void onDisconnect(NimBLEServer* pServer) {
-    Serial.println(F("[BLE Sync] Client disconnected"));
-    if (g_ctx) {
-      g_ctx->connected = false;
-      // Restart advertising
-      if (g_ctx->server) {
-        NimBLEDevice::getAdvertising()->start();
-        Serial.println(F("[BLE Sync] Restarted advertising"));
-      }
-    }
-  }
-};
-
-class RxCallbacks : public NimBLECharacteristicCallbacks {
- public:
-  void onWrite(NimBLECharacteristic *chr) {
+#endif // CONTROLLERNODE_BLE_SYNC_SHIM_H
     if (!g_ctx) return;
     std::string val = chr->getValue();
     if (val.size() > 0) {
@@ -264,7 +148,6 @@ inline bool scanAndConnect(BleSyncContext &ctx, uint32_t scanTimeSeconds = 5) {
   ctx.scanning = true;
   
   NimBLEScan* pScan = NimBLEDevice::getScan();
-  pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   pScan->setInterval(97);
   pScan->setWindow(37);
   pScan->setActiveScan(true);

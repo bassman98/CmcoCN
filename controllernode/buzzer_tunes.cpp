@@ -21,23 +21,21 @@ void playTune(const Note *tune, uint8_t count) {
             ledcSetup(channel, freq, PWM_RESOLUTION);
             ledcAttachPin(buzzerPin, channel);
             ledcWrite(channel, DUTYCYCLE_ON);
-
-            delay(tune[i].durationMs);
-
-            // Stop note
-            ledcWrite(channel, DUTYCYCLE_OFF);
-            delay(20); // short pause between notes
         } else {
             // REST: silence
-            delay(tune[i].durationMs);
+            uint8_t channel = pinIndex % 16;
+            ledcWrite(channel, DUTYCYCLE_OFF);
         }
+
+        delay(tune[i].durationMs);
+
+        // Stop note
+        ledcWrite(buzzerPin, DUTYCYCLE_OFF);
+        delay(20); // short pause between notes
     }
     
     // Detach PWM pin after playing tune to avoid conflicts
-    for (int ch = 0; ch < 16; ++ch) {
-      // best-effort: detach possible channels that may have been used
-      // there's no direct mapping here so keep as no-op or leave configured
-    }
+    ledcDetachPin(buzzerPin);
 }
 
 // -------------------------
