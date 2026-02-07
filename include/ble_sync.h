@@ -192,6 +192,7 @@ inline bool scanAndConnect(BleSyncContext &ctx, uint32_t scanTimeSeconds = 5) {
   ctx.scanning = true;
   
   NimBLEScan* pScan = NimBLEDevice::getScan();
+  pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
   pScan->setInterval(97);
   pScan->setWindow(37);
   pScan->setActiveScan(true);
