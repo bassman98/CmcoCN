@@ -8,12 +8,12 @@ export function get_softwareversions(request) {
     },
     body: {
       controller: {
-        version: "17",
-        firmwareUrl: "https://58e1d785-19fc-40e4-9f72-67035440c440.usrfiles.com/ugd/58e1d7_e8be784dbf9c4005b0ee71c1dec9e5d1.txt"
+        version: "18",
+        firmwareUrl: "https://58e1d785-19fc-40e4-9f72-67035440c440.usrfiles.com/ugd/58e1d7_98cc7b67aade4c32ad12866f15c48927.txt"
       },
       node: {
-        version: "17",
-        firmwareUrl: "https://58e1d785-19fc-40e4-9f72-67035440c440.usrfiles.com/ugd/58e1d7_42918554957140c383a8fb63b10632cf.txt"
+        version: "18",
+        firmwareUrl: "https://58e1d785-19fc-40e4-9f72-67035440c440.usrfiles.com/ugd/58e1d7_ede6bad800144f5ca835b12b73e58b26.txt"
       }
     }
   });

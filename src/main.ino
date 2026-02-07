@@ -4,6 +4,7 @@
 #include "config.h"
 #include "buzzer_tunes.h"
 #include "ble_sync.h"
+#include <deque>
 
 #ifdef BLUETOOTH
 #include "ble_iphone.h"
@@ -22,9 +23,19 @@ volatile bool requestSleep = false;
 StimulationSequence stim;
 float oneWaySyncDelay = 0.0f;
 
+#ifdef NODE
+struct PendingSync {
+  SyncPacket pkt;
+  uint64_t startTimeUs;
+};
+std::deque<PendingSync> syncQueue;
+#endif
+
 #ifdef CONTROLLER
 void sendSyncPacket() {
+  // Send the sequence and include a buffer delay so nodes can schedule playback
   packet_0.t_send_us = esp_timer_get_time();
+  packet_0.startDelayUs = 200000; // 200ms buffer by default
   memcpy(&packet_0.stimPeriods, stim.stimPeriods, sizeof(packet_0.stimPeriods));
   
   bool sent = BleSync::send(bleSyncCtx, (uint8_t *)&packet_0, sizeof(SyncPacket));
@@ -73,15 +84,18 @@ void onSyncReceive(const uint8_t *data, size_t len) {
   const SyncPacket *pkt = (const SyncPacket *)data;
   uint32_t t_now = esp_timer_get_time();
 
-  memcpy(&stim.stimPeriods, pkt->stimPeriods, sizeof(stim.stimPeriods));
-  stim.reset();
+  // Queue the packet for buffered playback
+  PendingSync ps;
+  memcpy(&ps.pkt, pkt, sizeof(SyncPacket));
+  ps.startTimeUs = (uint64_t)t_now + (uint64_t)pkt->startDelayUs;
+  syncQueue.push_back(ps);
 
+  // Send ACK back with original controller send timestamp and our recv time
   ack.t_send_us = pkt->t_send_us;
   ack.t_recv_us = t_now;
-
   BleSync::send(bleSyncCtx, (uint8_t *)&ack, sizeof(AckPacket));
 
-  Serial.println("Sync Packet Received via BLE");
+  Serial.println("Sync Packet queued for buffered playback");
 
   #ifdef POWER_SAVER
   requestSleep = true;
@@ -194,6 +208,21 @@ void loop() {
   #endif
   
   stim.update();
+
+#ifdef NODE
+  // Process pending buffered syncs
+  if (!syncQueue.empty()) {
+    uint64_t now = esp_timer_get_time();
+    while (!syncQueue.empty() && syncQueue.front().startTimeUs <= now) {
+      // Start the queued sequence
+      auto ready = syncQueue.front();
+      memcpy(&stim.stimPeriods, ready.pkt.stimPeriods, sizeof(stim.stimPeriods));
+      stim.reset();
+      syncQueue.pop_front();
+      Serial.println("Starting buffered sync sequence");
+    }
+  }
+#endif
 
   if (stim.isFinished()) {
       #ifdef CONTROLLER
