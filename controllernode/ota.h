@@ -16,3 +16,5 @@
 #include "../include/ota.h"
 
 #endif // CONTROLLERNODE_OTA_SHIM_H
+
+#endif // OTA_H
