@@ -28,6 +28,7 @@ typedef struct {
 
 // BLE Context for sync communication
 struct BleSyncContext {
+#if !defined(USE_ESPNOW)
   NimBLEServer *server = nullptr;
   NimBLEClient *client = nullptr;
   NimBLEAdvertisedDevice *peerDevice = nullptr;
@@ -35,6 +36,7 @@ struct BleSyncContext {
   NimBLECharacteristic *rxChar = nullptr;
   NimBLERemoteCharacteristic *remoteTxChar = nullptr;
   NimBLERemoteCharacteristic *remoteRxChar = nullptr;
+#endif
   std::queue<std::vector<uint8_t>> rxBuffer;
   bool connected = false;
   bool scanning = false;
