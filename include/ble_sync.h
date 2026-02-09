@@ -3,7 +3,7 @@
 #define BLE_SYNC_H
 
 #include <Arduino.h>
-#if defined(NODE)
+#if defined(USE_ESPNOW)
 #include <WiFi.h>
 #include <esp_now.h>
 #else
@@ -44,7 +44,7 @@ namespace BleSync {
 static BleSyncContext *g_ctx = nullptr;
 static void (*g_onReceiveCallback)(const uint8_t*, size_t) = nullptr;
 
-#if defined(NODE)
+#if defined(USE_ESPNOW)
 // ---------------- ESP-NOW (NODE) IMPLEMENTATION ----------------
 
 static void espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int len) {

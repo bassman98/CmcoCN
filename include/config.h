@@ -7,6 +7,9 @@
 //#define NODE
 #define CONTROLLER
 
+// Use ESP-NOW transport for low-latency controller<->node sync
+#define USE_ESPNOW
+
 // Board
 #define QTPY_ESP32_S3
 //#define GENERIC_ESP32_S3
