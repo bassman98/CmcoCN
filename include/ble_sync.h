@@ -377,9 +377,9 @@ inline void update(BleSyncContext &ctx) {
   #endif
 }
 
-} // namespace BleSync
-
 // Close transport selection (#if defined(NODE) / #else)
 #endif
+
+} // namespace BleSync
 
 #endif // BLE_SYNC_H
