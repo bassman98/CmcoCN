@@ -122,7 +122,12 @@ void setupBLE() {
   #endif
   
   Serial.print("BLE Device Address: ");
+  #if defined(USE_ESPNOW)
+  Serial.print("WiFi MAC Address: ");
+  Serial.println(WiFi.macAddress());
+  #else
   Serial.println(NimBLEDevice::getAddress().toString().c_str());
+  #endif
 }
 
 void testPWMOutputs() {
